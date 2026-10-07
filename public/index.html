@@ -679,4 +679,95 @@ if (token) {
 </script>
 
 </body>
+  <div id="adminLoginBox" style="display:block;max-width:400px;margin:30px auto;padding:20px;background:#fff;border-radius:15px">
+  <h2>GREAT MONEY Admin</h2>
+
+  <input id="adminEmail" type="email" placeholder="Admin Email"
+    style="width:100%;padding:12px;margin:8px 0;box-sizing:border-box">
+
+  <input id="adminPassword" type="password" placeholder="Admin Password"
+    style="width:100%;padding:12px;margin:8px 0;box-sizing:border-box">
+
+  <button onclick="adminLogin()"
+    style="width:100%;padding:12px;background:#087f3d;color:white;border:0;border-radius:8px">
+    Admin Login
+  </button>
+
+  <p id="adminMsg"></p>
+
+  <div id="adminData" style="display:none">
+    <h3>Admin Dashboard</h3>
+    <p>Total Users: <b id="adminUsers">0</b></p>
+    <p>Total Transactions: <b id="adminTransactions">0</b></p>
+    <p>Activated Users: <b id="adminActivated">0</b></p>
+    <p>Completed Payments: <b id="adminCompleted">0</b></p>
+  </div>
+</div>
+
+<script>
+async function adminLogin(){
+  const email=document.getElementById("adminEmail").value.trim();
+  const password=document.getElementById("adminPassword").value;
+
+  const msg=document.getElementById("adminMsg");
+
+  if(!email || !password){
+    msg.textContent="Enter admin email and password";
+    return;
+  }
+
+  try{
+    const res=await fetch("/api/admin/login",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email,password})
+    });
+
+    const data=await res.json();
+
+    if(!res.ok){
+      msg.textContent=data.error || "Admin login failed";
+      return;
+    }
+
+    localStorage.setItem("adminToken",data.token);
+    msg.textContent="Login successful";
+
+    loadAdminDashboard(data.token);
+
+  }catch(error){
+    msg.textContent="Server connection failed";
+  }
+}
+
+async function loadAdminDashboard(token){
+  const res=await fetch("/api/admin/overview",{
+    headers:{
+      "Authorization":"Bearer "+token
+    }
+  });
+
+  const data=await res.json();
+
+  if(!res.ok){
+    document.getElementById("adminMsg").textContent =
+      data.error || "Unable to load dashboard";
+    return;
+  }
+
+  document.getElementById("adminData").style.display="block";
+
+  document.getElementById("adminUsers").textContent =
+    data.totalUsers ?? data.users ?? 0;
+
+  document.getElementById("adminTransactions").textContent =
+    data.totalTransactions ?? data.transactions ?? 0;
+
+  document.getElementById("adminActivated").textContent =
+    data.activatedUsers ?? data.activated ?? 0;
+
+  document.getElementById("adminCompleted").textContent =
+    data.completedPayments ?? data.completed ?? 0;
+}
+</script>
 </html>
