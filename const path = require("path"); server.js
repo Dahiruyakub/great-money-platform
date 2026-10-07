@@ -193,6 +193,7 @@ app.post(
 );
 
 app.use(express.json({ limit: "100kb" }));
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: false }));
 
 app.use(
