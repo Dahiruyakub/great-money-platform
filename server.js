@@ -716,7 +716,53 @@ app.get(
     }
   }
 );
+/* ADMIN PAYOUT REQUEST */
+app.post(
+  "/api/admin/payout-request",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const amount = Number(req.body.amount);
+      const bankName = String(req.body.bankName || "").trim();
+      const accountNumber = String(req.body.accountNumber || "").trim();
+      const accountName = String(req.body.accountName || "").trim();
 
+      if (!amount || amount <= 0) {
+        return res.status(400).json({
+          error: "Invalid payout amount"
+        });
+      }
+
+      if (!bankName || !accountNumber || !accountName) {
+        return res.status(400).json({
+          error: "Bank details are required"
+        });
+      }
+
+      if (!/^\d{10}$/.test(accountNumber)) {
+        return res.status(400).json({
+          error: "Account number must be 10 digits"
+        });
+      }
+
+      return res.status(201).json({
+        status: "Pending",
+        message:
+          "Payout request created. Real bank transfer is not executed yet.",
+        amount,
+        bankName,
+        accountNumber,
+        accountName
+      });
+    } catch (error) {
+      console.error("Payout request error:", error);
+
+      return res.status(500).json({
+        error: "Could not create payout request"
+      });
+    }
+  }
+);
 /* FRONTEND */
 app.get(
   "*",
