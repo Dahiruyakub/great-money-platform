@@ -1,82 +1,116 @@
 require("dotenv").config();
-const express=require("express");
-const helmet=require("helmet");
-const rateLimit=require("express-rate-limit");
-const bcrypt=require("bcryptjs");
-const jwt=require("jsonwebtoken");
-const axios=require("axios");
-const Database=require("better-sqlite3");
-const path=require("path");
-const crypto=require("crypto");
 
-const app=express();
-const db=new Database("great_money.db");
-const PORT=process.env.PORT||3000;
-const JWT_SECRET=process.env.JWT_SECRET||"CHANGE_ME";
+const express = require("express");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { Pool } = require("pg");
+const crypto = require("crypto");
 
-app.use(helmet({contentSecurityPolicy:false}));
-app.use(express.json({limit:"100kb"}));
-app.use(express.urlencoded({extended:false}));
-app.use(rateLimit({windowMs:15*60*1000,max:300}));
-app.use(express.static(path.join(__dirname,"public")));
+const app = express();
+const PORT = process.env.PORT || 10000;
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS users(
- id INTEGER PRIMARY KEY AUTOINCREMENT,
- name TEXT NOT NULL,
- contact TEXT NOT NULL UNIQUE,
- password_hash TEXT NOT NULL,
- referral_code TEXT UNIQUE NOT NULL,
- balance INTEGER NOT NULL DEFAULT 0,
- created_at TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS transactions(
- id INTEGER PRIMARY KEY AUTOINCREMENT,
- user_id INTEGER NOT NULL,
- reference TEXT UNIQUE NOT NULL,
- type TEXT NOT NULL,
- amount INTEGER NOT NULL,
- status TEXT NOT NULL,
- created_at TEXT NOT NULL,
- FOREIGN KEY(user_id) REFERENCES users(id)
-);
-`);
-
-function now(){return new Date().toISOString();}
-function tokenFor(u){return jwt.sign({id:u.id,contact:u.contact},JWT_SECRET,{expiresIn:"7d"});}
-function auth(req,res,next){
-  const h=req.headers.authorization||"";
-  if(!h.startsWith("Bearer ")) return res.status(401).json({error:"Login required"});
-  try{req.user=jwt.verify(h.slice(7),JWT_SECRET);next()}catch(e){res.status(401).json({error:"Invalid or expired session"})}
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL is missing");
+  process.exit(1);
 }
-function userById(id){return db.prepare("SELECT id,name,contact,referral_code,balance,created_at FROM users WHERE id=?").get(id)}
 
-app.post("/api/register",async(req,res)=>{
-  const {name,contact,password}=req.body;
-  if(!name||!contact||!password||password.length<8) return res.status(400).json({error:"Name, contact and an 8+ character password are required"});
-  const exists=db.prepare("SELECT id FROM users WHERE contact=?").get(contact.trim().toLowerCase());
-  if(exists)return res.status(409).json({error:"An account with this contact already exists"});
-  const hash=await bcrypt.hash(password,12);
-  const code="GM-"+crypto.randomBytes(4).toString("hex").toUpperCase();
-  const info=db.prepare("INSERT INTO users(name,contact,password_hash,referral_code,created_at) VALUES(?,?,?,?,?)")
-    .run(name.trim(),contact.trim().toLowerCase(),hash,code,now());
-  const u=userById(info.lastInsertRowid);
-  res.json({token:tokenFor(u),user:u});
+if (!process.env.JWT_SECRET) {
+  console.error("JWT_SECRET is missing");
+  process.exit(1);
+}
+
+if (!process.env.PAYSTACK_SECRET_KEY) {
+  console.error("PAYSTACK_SECRET_KEY is missing");
+  process.exit(1);
+}
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
 
-app.post("/api/login",async(req,res)=>{
-  const {contact,password}=req.body;
-  const row=db.prepare("SELECT * FROM users WHERE contact=?").get((contact||"").trim().toLowerCase());
-  if(!row||!(await bcrypt.compare(password||"",row.password_hash)))return res.status(401).json({error:"Invalid login details"});
-  res.json({token:tokenFor(row),user:userById(row.id)});
-});
+app.use(helmet());
 
-app.get("/api/me",auth,(req,res)=>{
-  const u=userById(req.user.id);
-  if(!u)return res.status(404).json({error:"User not found"});
-  const transactions=db.prepare("SELECT reference,type,amount,status,created_at FROM transactions WHERE user_id=? ORDER BY id DESC").all(u.id);
-  res.json({user:u,transactions});
-});
+/*
+  PAYSTACK WEBHOOK
+  This route must receive the RAW request body.
+*/
+app.post(
+  "/api/paystack/webhook",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    try {
+      const signature = req.headers["x-paystack-signature"];
 
-app.post("/api/deposit",auth,async(req,res)=>{
-  const amo
+      if (!signature) {
+        return res.status(401).send("Missing signature");
+      }
+
+      const hash = crypto
+        .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY)
+        .update(req.body)
+        .digest("hex");
+
+      if (signature !== hash) {
+        return res.status(401).send("Invalid signature");
+      }
+
+      const event = JSON.parse(req.body.toString());
+
+      if (event.event === "charge.success" && event.data) {
+        if (
+          Number(event.data.amount) === 150000 &&
+          event.data.currency === "NGN"
+        ) {
+          await completePayment(
+            event.data.reference,
+            event.data
+          );
+        }
+      }
+
+      return res.sendStatus(200);
+
+    } catch (error) {
+      console.error("Webhook error:", error);
+      return res.sendStatus(500);
+    }
+  }
+);
+
+/*
+  Normal JSON requests
+*/
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: false }));
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300
+  })
+);
+
+app.use(express.static("public"));
+
+async function initDatabase() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(120) NOT NULL,
+      contact VARCHAR(150) UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      referral_code VARCHAR(30) UNIQUE NOT NULL,
+      balance NUMERIC(12,2) DEFAULT 0,
+      activated BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS transactions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      reference VARCHAR(120) UNIQUE NOT NULL,
+      paystack_transaction_id VARCHAR(120),
+      type VARCHAR
