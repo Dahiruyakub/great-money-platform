@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GREAT MONEY - Payment</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 30px 15px;
+      font-family: Arial, sans-serif;
+      background: #f4f8f6;
+      text-align: center;
+    }
+
+    .box {
+      max-width: 450px;
+      margin: 80px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,.1);
+    }
+
+    h1 {
+      color: #087f5b;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: 0;
+      border-radius: 8px;
+      background: #087f5b;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h1>GREAT MONEY</h1>
+
+  <h2>Payment Received</h2>
+
+  <p id="message">
+    Checking your payment...
+  </p>
+
+  <button onclick="goHome()">
+    Return to GREAT MONEY
+  </button>
+</div>
+
+<script>
+
+const params = new URLSearchParams(
+  window.location.search
+);
+
+const reference = params.get("reference");
+
+const message =
+  document.getElementById("message");
+
+if (reference) {
+
+  message.textContent =
+    "Your payment has been received. Please return to your dashboard to check your account status.";
+
+} else {
+
+  message.textContent =
+    "Payment information was not found. Please return to GREAT MONEY and try again.";
+
+}
+
+function goHome() {
+  window.location.href = "/";
+}
+
+</script>
+
+</body>
+</html>
