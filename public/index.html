@@ -8,50 +8,38 @@
   <style>
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
       font-family: Arial, sans-serif;
     }
 
     body {
+      margin: 0;
       background: #f4f7f6;
-      color: #123;
+      color: #222;
     }
 
     header {
       background: #087f3f;
       color: white;
-      padding: 18px;
       text-align: center;
-    }
-
-    header h1 {
-      font-size: 28px;
-    }
-
-    header p {
-      margin-top: 5px;
-      opacity: .9;
+      padding: 22px 10px;
     }
 
     .container {
-      max-width: 480px;
+      max-width: 450px;
       margin: 30px auto;
-      padding: 20px;
+      padding: 15px;
     }
 
     .card {
       background: white;
       padding: 25px;
       border-radius: 15px;
-      box-shadow: 0 5px 20px rgba(0,0,0,.08);
-      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,.08);
     }
 
     h2 {
-      color: #087f3f;
-      margin-bottom: 15px;
       text-align: center;
+      color: #087f3f;
     }
 
     input {
@@ -60,31 +48,26 @@
       margin: 8px 0;
       border: 1px solid #ccc;
       border-radius: 8px;
-      font-size: 15px;
+      font-size: 16px;
     }
 
     button {
       width: 100%;
       padding: 14px;
-      border: none;
+      margin-top: 10px;
+      border: 0;
       border-radius: 8px;
       background: #087f3f;
       color: white;
       font-size: 16px;
       font-weight: bold;
-      margin-top: 10px;
-      cursor: pointer;
     }
 
-    button:hover {
-      background: #056331;
-    }
-
-    .secondary {
+    .blue {
       background: #17365d;
     }
 
-    .danger {
+    .red {
       background: #c62828;
     }
 
@@ -96,12 +79,15 @@
     }
 
     .message {
-      padding: 12px;
       margin-top: 12px;
+      padding: 10px;
+      background: #fff3cd;
       border-radius: 8px;
       display: none;
-      background: #fff3cd;
-      color: #664d03;
+    }
+
+    .hidden {
+      display: none;
     }
 
     .balance {
@@ -115,26 +101,15 @@
 
     .balance strong {
       display: block;
-      font-size: 32px;
+      font-size: 30px;
       margin-top: 8px;
     }
 
     .info {
-      padding: 15px;
       background: #f1f8f4;
-      border-radius: 10px;
-      margin-top: 12px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    footer {
-      text-align: center;
-      padding: 20px;
-      color: #777;
-      font-size: 13px;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
     }
   </style>
 </head>
@@ -149,43 +124,43 @@
 <div class="container">
 
   <!-- HOME -->
-  <section id="homeSection" class="card">
-    <h2>Welcome to GREAT MONEY</h2>
+  <div id="home" class="card">
+    <h2>Welcome</h2>
 
-    <p style="text-align:center; line-height:1.6;">
-      Create your account and manage your GREAT MONEY account online.
+    <p style="text-align:center;">
+      Create your GREAT MONEY account.
     </p>
 
     <button onclick="showRegister()">
       Create Account
     </button>
 
-    <button class="secondary" onclick="showLogin()">
+    <button class="blue" onclick="showLogin()">
       Login
     </button>
-  </section>
+  </div>
 
 
   <!-- REGISTER -->
-  <section id="registerSection" class="card hidden">
+  <div id="register" class="card hidden">
     <h2>Create Account</h2>
 
     <input
-      id="regName"
+      id="name"
       type="text"
       placeholder="Full Name"
     >
 
     <input
-      id="regContact"
+      id="email"
       type="email"
       placeholder="Email Address"
     >
 
     <input
-      id="regPassword"
+      id="password"
       type="password"
-      placeholder="Password (minimum 8 characters)"
+      placeholder="Password (8 characters minimum)"
     >
 
     <button onclick="registerUser()">
@@ -197,15 +172,15 @@
     <div class="link" onclick="showLogin()">
       Already have an account? Login
     </div>
-  </section>
+  </div>
 
 
   <!-- LOGIN -->
-  <section id="loginSection" class="card hidden">
+  <div id="login" class="card hidden">
     <h2>Login</h2>
 
     <input
-      id="loginContact"
+      id="loginEmail"
       type="email"
       placeholder="Email Address"
     >
@@ -222,4 +197,486 @@
 
     <div id="loginMessage" class="message"></div>
 
-    <div class="link" onclick
+    <div class="link" onclick="showRegister()">
+      Create a new account
+    </div>
+  </div>
+
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="hidden">
+
+    <div class="balance">
+      Account Balance
+      <strong id="balance">₦0.00</strong>
+    </div>
+
+    <div class="card">
+      <h2>My Account</h2>
+
+      <div class="info">
+        <b>Name:</b>
+        <span id="userName"></span>
+      </div>
+
+      <div class="info">
+        <b>Email:</b>
+        <span id="userEmail"></span>
+      </div>
+
+      <div class="info">
+        <b>Referral Code:</b>
+        <span id="referralCode"></span>
+      </div>
+
+      <div class="info">
+        <b>Status:</b>
+        <span id="status"></span>
+      </div>
+
+      <button onclick="activate()">
+        Activate Account — ₦1,500
+      </button>
+
+      <button class="blue" onclick="transactions()">
+        My Transactions
+      </button>
+
+      <button class="red" onclick="logout()">
+        Logout
+      </button>
+
+      <div id="dashboardMessage" class="message"></div>
+
+      <div id="transactionList"></div>
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+let token = localStorage.getItem("great_money_token");
+
+
+/* NAVIGATION */
+
+function hideAll() {
+  document.getElementById("home")
+    .classList.add("hidden");
+
+  document.getElementById("register")
+    .classList.add("hidden");
+
+  document.getElementById("login")
+    .classList.add("hidden");
+
+  document.getElementById("dashboard")
+    .classList.add("hidden");
+}
+
+
+function showHome() {
+  hideAll();
+
+  document.getElementById("home")
+    .classList.remove("hidden");
+}
+
+
+function showRegister() {
+  hideAll();
+
+  document.getElementById("register")
+    .classList.remove("hidden");
+}
+
+
+function showLogin() {
+  hideAll();
+
+  document.getElementById("login")
+    .classList.remove("hidden");
+}
+
+
+function showDashboard() {
+  hideAll();
+
+  document.getElementById("dashboard")
+    .classList.remove("hidden");
+
+  loadUser();
+}
+
+
+/* MESSAGE */
+
+function message(id, text) {
+  const box =
+    document.getElementById(id);
+
+  box.textContent = text;
+  box.style.display = "block";
+}
+
+
+/* REGISTER */
+
+async function registerUser() {
+
+  const name =
+    document.getElementById("name").value.trim();
+
+  const contact =
+    document.getElementById("email").value.trim();
+
+  const password =
+    document.getElementById("password").value;
+
+  if (!name || !contact || !password) {
+    message(
+      "registerMessage",
+      "Please fill all fields."
+    );
+    return;
+  }
+
+  if (password.length < 8) {
+    message(
+      "registerMessage",
+      "Password must be at least 8 characters."
+    );
+    return;
+  }
+
+  try {
+
+    const response =
+      await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+        body: JSON.stringify({
+          name: name,
+          contact: contact,
+          password: password
+        })
+      });
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      message(
+        "registerMessage",
+        data.error ||
+        "Registration failed."
+      );
+      return;
+    }
+
+    token = data.token;
+
+    localStorage.setItem(
+      "great_money_token",
+      token
+    );
+
+    showDashboard();
+
+  } catch (error) {
+
+    message(
+      "registerMessage",
+      "Connection error. Try again."
+    );
+  }
+}
+
+
+/* LOGIN */
+
+async function loginUser() {
+
+  const contact =
+    document.getElementById("loginEmail")
+      .value.trim();
+
+  const password =
+    document.getElementById("loginPassword")
+      .value;
+
+  if (!contact || !password) {
+    message(
+      "loginMessage",
+      "Enter email and password."
+    );
+    return;
+  }
+
+  try {
+
+    const response =
+      await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+        body: JSON.stringify({
+          contact: contact,
+          password: password
+        })
+      });
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      message(
+        "loginMessage",
+        data.error ||
+        "Login failed."
+      );
+      return;
+    }
+
+    token = data.token;
+
+    localStorage.setItem(
+      "great_money_token",
+      token
+    );
+
+    showDashboard();
+
+  } catch (error) {
+
+    message(
+      "loginMessage",
+      "Connection error. Try again."
+    );
+  }
+}
+
+
+/* LOAD USER */
+
+async function loadUser() {
+
+  if (!token) {
+    showHome();
+    return;
+  }
+
+  try {
+
+    const response =
+      await fetch("/api/me", {
+        headers: {
+          "Authorization":
+            "Bearer " + token
+        }
+      });
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      logout();
+      return;
+    }
+
+    const user = data.user;
+
+    document.getElementById(
+      "userName"
+    ).textContent = user.name;
+
+    document.getElementById(
+      "userEmail"
+    ).textContent = user.contact;
+
+    document.getElementById(
+      "referralCode"
+    ).textContent =
+      user.referral_code;
+
+    document.getElementById(
+      "balance"
+    ).textContent =
+      "₦" +
+      Number(user.balance || 0)
+        .toLocaleString(
+          "en-NG",
+          {
+            minimumFractionDigits: 2
+          }
+        );
+
+    document.getElementById(
+      "status"
+    ).textContent =
+      user.activated
+        ? "Activated"
+        : "Not Activated";
+
+  } catch (error) {
+
+    message(
+      "dashboardMessage",
+      "Could not load account."
+    );
+  }
+}
+
+
+/* PAYMENT */
+
+async function activate() {
+
+  message(
+    "dashboardMessage",
+    "Preparing ₦1,500 payment..."
+  );
+
+  try {
+
+    const response =
+      await fetch(
+        "/api/paystack/initialize",
+        {
+          method: "POST",
+          headers: {
+            "Authorization":
+              "Bearer " + token,
+            "Content-Type":
+              "application/json"
+          }
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      message(
+        "dashboardMessage",
+        data.error ||
+        "Payment could not start."
+      );
+      return;
+    }
+
+    localStorage.setItem(
+      "great_money_payment_reference",
+      data.reference
+    );
+
+    window.location.href =
+      data.authorization_url;
+
+  } catch (error) {
+
+    message(
+      "dashboardMessage",
+      "Payment connection error."
+    );
+  }
+}
+
+
+/* TRANSACTIONS */
+
+async function transactions() {
+
+  try {
+
+    const response =
+      await fetch(
+        "/api/transactions",
+        {
+          headers: {
+            "Authorization":
+              "Bearer " + token
+          }
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      message(
+        "dashboardMessage",
+        "Could not load transactions."
+      );
+      return;
+    }
+
+    const list =
+      document.getElementById(
+        "transactionList"
+      );
+
+    if (
+      !data.transactions ||
+      data.transactions.length === 0
+    ) {
+      list.innerHTML =
+        "<p>No transactions yet.</p>";
+      return;
+    }
+
+    list.innerHTML =
+      data.transactions.map(tx => `
+        <div class="info">
+          <b>${tx.type}</b><br>
+          Amount: ₦${Number(tx.amount)
+            .toLocaleString()}<br>
+          Status: ${tx.status}<br>
+          Reference: ${tx.reference}
+        </div>
+      `).join("");
+
+  } catch (error) {
+
+    message(
+      "dashboardMessage",
+      "Connection error."
+    );
+  }
+}
+
+
+/* LOGOUT */
+
+function logout() {
+
+  localStorage.removeItem(
+    "great_money_token"
+  );
+
+  token = null;
+
+  showHome();
+}
+
+
+/* START */
+
+if (token) {
+  showDashboard();
+} else {
+  showHome();
+}
+
+</script>
+
+</body>
+</html>
