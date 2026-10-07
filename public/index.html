@@ -866,3 +866,63 @@ async function requestPayout(){
       "Server connection failed";
   }
 }
+async function requestPayout() {
+  const token = localStorage.getItem("adminToken");
+
+  const amount = Number(document.getElementById("payoutAmount").value);
+  const bankName = document.getElementById("bankName").value.trim();
+  const accountNumber = document.getElementById("accountNumber").value.trim();
+  const accountName = document.getElementById("accountName").value.trim();
+  const msg = document.getElementById("payoutMsg");
+
+  msg.textContent = "Ana tura payout request...";
+
+  if (!token) {
+    msg.textContent = "Sake login na Admin.";
+    return;
+  }
+
+  if (!amount || amount <= 0) {
+    msg.textContent = "Enter a valid amount";
+    return;
+  }
+
+  if (!bankName || !accountNumber || !accountName) {
+    msg.textContent = "Fill all bank details";
+    return;
+  }
+
+  if (!/^\d{10}$/.test(accountNumber)) {
+    msg.textContent = "Account number must be 10 digits";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/admin/payout-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({
+        amount,
+        bankName,
+        accountNumber,
+        accountName
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      msg.textContent = data.error || "Payout request failed";
+      return;
+    }
+
+    msg.textContent = "✅ Payout request created: Pending";
+
+  } catch (error) {
+    console.error(error);
+    msg.textContent = "❌ Server connection failed";
+  }
+}
