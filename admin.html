@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GREAT MONEY - Admin</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#f3f6f4;margin:0;padding:20px;color:#17251d}
+    .box{max-width:700px;margin:30px auto;background:white;padding:25px;border-radius:15px;box-shadow:0 4px 18px #0001}
+    h1{color:#087f3d}
+    input,button{width:100%;padding:13px;margin:8px 0;border-radius:8px;box-sizing:border-box}
+    input{border:1px solid #ccc}
+    button{border:0;background:#087f3d;color:white;font-weight:bold}
+    .card{background:#f1f7f3;padding:18px;margin:12px 0;border-radius:10px}
+    .error{color:#c00}
+    .hidden{display:none}
+  </style>
+</head>
+
+<body>
+
+<div class="box" id="loginBox">
+  <h1>GREAT MONEY</h1>
+  <h2>Admin Login</h2>
+
+  <input id="email" type="email" placeholder="Admin Email">
+  <input id="password" type="password" placeholder="Admin Password">
+
+  <button onclick="adminLogin()">Login</button>
+  <p id="loginMsg" class="error"></p>
+</div>
